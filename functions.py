@@ -1,5 +1,5 @@
 import random
-
+from gui import *
 """
 Functions
 """
@@ -38,5 +38,16 @@ def set_word(grid, list):
         else:
             break
 
-def reveal_word(row, col)
+#def reveal_word(row, col):
+
+def start_window():
+    """
+    Creates a window
+    """
+    root = Tk()
+    root.title("Minne")
+
+    start_text = Label(root,text = "Skriv ...")
+    start_text.grid(row=0,column=0)
+
     
