@@ -1,3 +1,10 @@
+#Emil Hedeby
+#P-
+
+
+
+
+
 from functions import *
 
 #The game board
@@ -5,16 +12,16 @@ class Board:
 
     def __init__(self, A):
         self.grid = {}
-        alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
-        numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
-        rows = []
-        cols = []
+        #alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+        #numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
+        rows = ['A','B','C','D','E','F']
+        cols = [1, 2, 3, 4, 5, 6]
 
-        for alphabet in range(A):
-            rows.append(alphabet)
+        #for alphabet in range(A):
+            #rows.append(alphabet)
         
-        for numbers in range(A):
-            cols.append(numbers)
+        #for numbers in range(A):
+            #cols.append(numbers)
 
 
         for row in rows:
@@ -33,14 +40,12 @@ class Board:
 grid = Board(6)
 
 
+def main():
+    #Running the functions from functions.py
+    game_list = import_game_list("Memo.txt")
 
-#Running the functions from functions.py
-game_list = import_game_list("Memo.txt")
+    save_score_to_file("highscore.txt", "Emil", 13)
+    start_window()
 
-save_score_to_file("highscore.txt", "Emil", 13)
-
-
-
-#Asking User Input
-#A = input("Input A, grid will be of size AxA: >>")
-#(user = input("Username: >>")
+if __name__ == '__main__':
+    main()
