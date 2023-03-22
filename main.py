@@ -82,18 +82,9 @@ def reveal_word(row, col):
 
 def hide_word(row, col):
     button = buttons[(row-1)*6 + (col-1)]
-    
-    try:
-        # Get the value of the corresponding card on the board
-        global value
-        value = grid.get_value(chr(row + 64), col)
-        print("Value retrieved: {}".format(value))
+    button.config(text=" ")
+    button.config(state=tk.NORMAL)
 
-        # Set the text of the button to the revealed word
-        button.config(text= None)
-
-    except Exception as e:
-        print("Error: {}".format(str(e)))
 
 # Tkinter GUI
 root = tk.Tk()
@@ -132,14 +123,17 @@ def store_input():
             row = ord(input_value[0].upper()) - 64
             col = int(input_value[1])
             reveal_word(row, col)
+            print("Word revealed.")
+            print("trying to hide word.")
             hide_word(row,col)
     except:
         raise ValueError
     finally:
         clear_text_input()
-        
 
-        
+
+
+
 def clear_text_input():
     entry.delete(0, tk.END)
 
