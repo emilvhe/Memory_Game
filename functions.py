@@ -1,5 +1,5 @@
 import random
-from gui import *
+from main import *
 """
 Functions
 """
@@ -50,4 +50,3 @@ def start_window():
     start_text = Label(root,text = "Skriv ...")
     start_text.grid(row=0,column=0)
 
-    
