@@ -5,23 +5,24 @@ from functions import *
 import tkinter as tk
 
 attempt = 0
+current_guesses = 0
+current_word = []
 
-
-with open("memo.txt", "r") as f:
+with open("memoUTF8.txt", "r", encoding='utf-8') as f:
     full_list = []
     for line in f.readlines():
         clean = line.strip()
         full_list.append(clean)
 
-small_list = random.sample(full_list, 18)
+    small_list = random.sample(full_list, 18)
 
-game_list = []
+    game_list = []
 
-for item in small_list:
-    game_list.append(item)
-    game_list.append(item)
+    for item in small_list:
+        game_list.append(item)
+        game_list.append(item)
 
-random.shuffle(game_list)
+    random.shuffle(game_list)
 
 
 class Board:
@@ -32,6 +33,8 @@ class Board:
         for row in rows:
             for col in cols:
                 self.grid[row + str(col)] = None
+    
+        self.matched_cards = []
 
     def set_value(self, row, col, value):
         self.grid[row + str(col)] = value
@@ -46,7 +49,11 @@ class Board:
     def hide_value(self, row, col):
         self.grid[row + str(col)] = None
 
-
+    def add_matched_cards(self, row, col):
+        self.matched_cards.append(row + str(col))
+    
+    def is_matched_card(self, row, col):
+        return row + str(col) in self.matched_cards
 # create a new grid object
 grid = Board()
 
@@ -75,15 +82,39 @@ def reveal_word(row, col):
 
         # Disable the button so it cannot be clicked again
         button.config(state=tk.DISABLED)
-        
+    
+        #if check_match():
+            #grid.add_matched_card(chr(row + 64), col)
+            #if len(grid.matched_cards) == 36:
+                #root.quit()
+            #else:
+                #root.after(100, lambda: hide_word(row, col))
+        #else:
+            #root.after(100, lambda: hide_word(row, col))
     except Exception as e:
         print("Error: {}".format(str(e)))
 
 
 def hide_word(row, col):
     button = buttons[(row-1)*6 + (col-1)]
-    button.config(text=" ")
-    button.config(state=tk.NORMAL)
+    print("hide_word function")
+    if not grid.is_matched_card(chr(row + 64), col):
+        button.config(text ="")
+        button.config(state=tk.NORMAL)
+
+
+def check_match():
+    # Get all revealed values
+    revealed_values = [button.cget('text') for button in buttons if button.cget('state') == 'disabled']
+
+    # Check if two of the revealed values are the same
+    if len(revealed_values) == 2 and revealed_values[0] == revealed_values[1]:
+        print("match")
+        return True
+    elif len(revealed_values) == 2 and revealed_values[0] != revealed_values[1]:
+        print("Not Match")        
+        return False
+
 
 
 # Tkinter GUI
@@ -117,15 +148,29 @@ col = ""
 input_value = ""
 
 def store_input():
+    global current_guesses, current_word
     input_value = entry.get()
+
     try:
         if len(input_value) == 2:
             row = ord(input_value[0].upper()) - 64
             col = int(input_value[1])
             reveal_word(row, col)
             print("Word revealed.")
-            print("trying to hide word.")
-            hide_word(row,col)
+            current_guesses += 1
+            current_word.append([row, col])
+
+            if current_guesses == 2:
+                if current_word[0] == [1]:
+                    grid.add_matched_cards(chr(current_word[0][0]+64), current_word[0][1])
+                    if len(grid.matched_cards) == 36:
+                        root.quit
+                else:
+                    hide_word(current_word[0][0], current_word[0][1])
+                    hide_word(current_word[1][0], current_word[1][1])
+                current_guesses = 0
+                current_word = []
+
     except:
         raise ValueError
     finally:
@@ -141,18 +186,6 @@ def clear_text_input():
 # knapp för att använda store input som ska spara inputen.
 button = tk.Button(root, text="Submit cordinate", command=store_input)
 button.pack(side=tk.BOTTOM)
-
-def check_match():
-    # Get all revealed values
-    revealed_values = [button.cget('text') for button in buttons if button.cget('state') == 'disabled']
-
-    # Check if two of the revealed values are the same
-    if len(revealed_values) == 2 and revealed_values[0] == revealed_values[1]:
-        print("match")
-        return True
-    else:
-        print("Not Match")
-        return False
 
 
 # Start the Tkinter event loop
