@@ -1,4 +1,3 @@
-
 from time import time
 import random
 from functions import *
@@ -83,14 +82,8 @@ def reveal_word(row, col):
         # Disable the button so it cannot be clicked again
         button.config(state=tk.DISABLED)
     
-        #if check_match():
-            #grid.add_matched_card(chr(row + 64), col)
-            #if len(grid.matched_cards) == 36:
-                #root.quit()
-            #else:
-                #root.after(100, lambda: hide_word(row, col))
-        #else:
-            #root.after(100, lambda: hide_word(row, col))
+        #kollar för matches
+        root.after(100, check_match)
     except Exception as e:
         print("Error: {}".format(str(e)))
 
@@ -101,6 +94,8 @@ def hide_word(row, col):
     if not grid.is_matched_card(chr(row + 64), col):
         button.config(text ="")
         button.config(state=tk.NORMAL)
+    else:
+        grid.matched_cards.remove(chr(row + 64) + str(col))
 
 
 def check_match():
@@ -110,9 +105,19 @@ def check_match():
     # Check if two of the revealed values are the same
     if len(revealed_values) == 2 and revealed_values[0] == revealed_values[1]:
         print("match")
+        if current_word:
+            row1, col1 = current_word[0]
+            row2, col2 = current_word[1]
+        grid.add_matched_cards(chr(row1 + 64), col1)
+        grid.add_matched_cards(chr(row2 + 64), col2)
+        current_word.clear()
         return True
     elif len(revealed_values) == 2 and revealed_values[0] != revealed_values[1]:
-        print("Not Match")        
+        print("Not Match")    
+        if current_word:
+            hide_word(current_word[0][0], current_word[0][1])
+            hide_word(current_word[1][0], current_word[1][1])
+            current_word.clear()    
         return False
 
 
@@ -120,7 +125,7 @@ def check_match():
 # Tkinter GUI
 root = tk.Tk()
 root.title("Emil A1-F6 IQ Spel!")
-root.geometry("960x620")
+root.geometry("1080x800")
 
 my_frame = tk.Frame(root)
 my_frame.pack(pady=10)
@@ -161,18 +166,19 @@ def store_input():
             current_word.append([row, col])
 
             if current_guesses == 2:
-                if current_word[0] == [1]:
-                    grid.add_matched_cards(chr(current_word[0][0]+64), current_word[0][1])
-                    if len(grid.matched_cards) == 36:
-                        root.quit
-                else:
-                    hide_word(current_word[0][0], current_word[0][1])
-                    hide_word(current_word[1][0], current_word[1][1])
+                if check_match():
+                    if len(grid.matched_cards) == len(grid.grid):
+                        root.quit()
+                       
                 current_guesses = 0
-                current_word = []
+                current_word.clear()
+    except Exception as e:
+        print("error :(".format(str(e)))
+                #if len(current_word[0]) == [1]:
+                    #grid.add_matched_cards(chr(current_word[0][0]+64), current_word[0][1])
+                    #if len(grid.matched_cards) == 36:
+                        #root.quit
 
-    except:
-        raise ValueError
     finally:
         clear_text_input()
 
