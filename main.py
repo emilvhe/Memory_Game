@@ -6,25 +6,35 @@ attempt = 0
 current_guesses = 0
 current_word = []
 
-with open("memoUTF8.txt", "r", encoding='utf-8') as f:
-    full_list = []
-    for line in f.readlines():
-        clean = line.strip()
-        full_list.append(clean)
 
-    small_list = random.sample(full_list, 18)
+def create_game_list(file_name, sample_size):
+    """Create a shuffled game list from file.
 
-    game_list = []
+    Args:
+        file_name (str): File name
+        sample_size (int): Number of unique words to sample.
 
-    for item in small_list:
-        game_list.append(item)
-        game_list.append(item)
+    Returns:
+        list: A shuffled game list containing pairs of sample words.
+    """
+    with open("memoUTF8.txt", "r", encoding='utf-8') as f:
+        full_list = [line.strip() for line in f.readlines()]
+        small_list = random.sample(full_list, sample_size)
 
-    random.shuffle(game_list)
+        game_list = []
 
+        for item in small_list:
+            game_list.append(item)
+            game_list.append(item)
+
+        random.shuffle(game_list)
+        return game_list
+
+game_list = create_game_list("memoUTF8.txt", 18)
 
 class Board:
     def __init__(self):
+        """ Initialize an empty board """
         self.grid = {}
         rows = ['A', 'B', 'C', 'D', 'E', 'F']
         cols = [1, 2, 3, 4, 5, 6]
@@ -35,36 +45,89 @@ class Board:
         self.matched_cards = []
 
     def set_value(self, row, col, value):
+        """Set the value at the specified row and col on the grid.
+
+        Args:
+            row (str): The row letter (A-F) of the card on the grid
+            col (int): The column number (1-6) of the card on the grid.
+            value (str): The word to store at the specified location.
+        """
         self.grid[row + str(col)] = value
 
     def get_value(self, row, col):
+        """Get the value at the specified row and col on the grid.
+
+        Args:
+            row (str): The row letter (A-F) of the card on the grid.
+            col (int): The column number (1-6) of the card on the grid.
+
+        Returns:
+            str: The word stored at the specified location.
+        """
         return self.grid[row + str(col)]
 
     def get_all_values(self):
+        """Get all values stored in the grid.
+
+        Returns:
+            dict_values: A collection of all values in the grid.
+        """
         return self.grid.values()
     
     def hide_value(self, row, col):
+        """Hide the value at the specified row and col on the grid.
+
+        Args:
+            row (str): The row letter (A-F) of the card on the grid.
+            col (int): The column number (1-6) of the card on the grid.
+        """
         self.grid[row + str(col)] = None
 
     def add_matched_cards(self, row, col):
+        """Add the specified row and col to the list of matched cards.
+
+        Args:
+            row (str): The row letter (A-F) of the matched card on the grid.
+            col (int): The column number (1-6) of the matched card on the grid.
+        """
         self.matched_cards.append(row + str(col))
     
     def is_matched_card(self, row, col):
+        """Check if the specified row and col represent a matched card.
+
+        Args:
+            row (str): The row letter (A-F) of the card on the grid.
+            col (int): The column number (1-6) of the card on the grid.
+
+        Returns:
+            bool: True if the card is matched, False otherwise.
+        """
         return row + str(col) in self.matched_cards
+    
 # create a new grid object
 grid = Board()
 
-i = 0
-for row in grid.grid.keys():
-    grid.set_value(row[0], int(row[1]), game_list[i])
-    if i < 36:
-        i += 1
-        continue
-    else:
-        break
+def add_words():
+    """Goes through row and such and adds one word from the game list.
+    """
+    i = 0
+    for row in grid.grid.keys():
+        grid.set_value(row[0], int(row[1]), game_list[i])
+        if i < 36:
+            i += 1
+            continue
+        else:
+            break
 
+add_words()
 
 def reveal_word(row, col):
+    """Reveal the word at the specified row and col on the grid.
+    
+    Args:
+        row (int): The row number (1-6) of the card on the grid
+        col (int): The column number (1-6) of the card on the grid.
+    """
     # Get the corresponding button
     button = buttons[(row-1)*6 + (col-1)]
     
@@ -91,6 +154,13 @@ def reveal_word(row, col):
         print("Error: {}".format(str(e)))
 
 def hide_word(row, col):
+    """Hide the word at the specified row and col on the grid.
+
+    Args:
+        row (int): The row number (1-6) of the card on the grid.
+        col (int): The column number (1-6) of the card on the grid.
+    """
+
     button = buttons[(row-1)*6 + (col-1)]
     print("hide_word function")
     if not grid.is_matched_card(chr(row + 64), col):
@@ -100,6 +170,11 @@ def hide_word(row, col):
         grid.matched_cards.remove(chr(row + 64) + str(col))
 
 def check_match():
+    """Check if the currently revealed cards are a match.
+
+    Returns:
+        bool: True if there is a match, False otherwise.
+    """
     global current_word, current_guesses
     if current_word and len(current_word) == 2:
         row1, col1 = current_word[0]
@@ -154,6 +229,11 @@ col = ""
 input_value = ""
 
 def store_input():
+    """
+    A function to get the user input and process it.
+    In: Nothing
+    Out: Nothing
+    """
     global current_guesses, current_word
     input_value = entry.get()
 
@@ -173,6 +253,7 @@ def store_input():
 
 
 def clear_text_input():
+    """Clear the text input in the Entry widget."""
     entry.delete(0, tk.END)
 
 
