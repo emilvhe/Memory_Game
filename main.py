@@ -1,6 +1,5 @@
 from time import time
 import random
-from functions import *
 import tkinter as tk
 
 attempt = 0
@@ -39,7 +38,6 @@ class Board:
         self.grid[row + str(col)] = value
 
     def get_value(self, row, col):
-        check_match()
         return self.grid[row + str(col)]
 
     def get_all_values(self):
@@ -72,7 +70,7 @@ def reveal_word(row, col):
     
     try:
         # Get the value of the corresponding card on the board
-        global value
+        global value, current_guesses
         value = grid.get_value(chr(row + 64), col)
         print("Value retrieved: {}".format(value))
 
@@ -82,11 +80,15 @@ def reveal_word(row, col):
         # Disable the button so it cannot be clicked again
         button.config(state=tk.DISABLED)
     
-        #kollar för matches
-        root.after(100, check_match)
+        current_guesses += 1
+        current_word.append([row, col])
+
+        # Check for matches after every two guesses
+        if current_guesses == 2:
+            root.after(100, check_match)
+            current_guesses = 0
     except Exception as e:
         print("Error: {}".format(str(e)))
-
 
 def hide_word(row, col):
     button = buttons[(row-1)*6 + (col-1)]
@@ -97,28 +99,27 @@ def hide_word(row, col):
     else:
         grid.matched_cards.remove(chr(row + 64) + str(col))
 
-
 def check_match():
-    # Get all revealed values
-    revealed_values = [button.cget('text') for button in buttons if button.cget('state') == 'disabled']
+    global current_word, current_guesses
+    if current_word and len(current_word) == 2:
+        row1, col1 = current_word[0]
+        row2, col2 = current_word[1]
+        value1 = grid.get_value(chr(row1 + 64), col1)
+        value2 = grid.get_value(chr(row2 + 64), col2)
 
-    # Check if two of the revealed values are the same
-    if len(revealed_values) == 2 and revealed_values[0] == revealed_values[1]:
-        print("match")
-        if current_word:
-            row1, col1 = current_word[0]
-            row2, col2 = current_word[1]
-        grid.add_matched_cards(chr(row1 + 64), col1)
-        grid.add_matched_cards(chr(row2 + 64), col2)
-        current_word.clear()
-        return True
-    elif len(revealed_values) == 2 and revealed_values[0] != revealed_values[1]:
-        print("Not Match")    
-        if current_word:
-            hide_word(current_word[0][0], current_word[0][1])
-            hide_word(current_word[1][0], current_word[1][1])
-            current_word.clear()    
-        return False
+        if value1 == value2:
+            print("match")
+            grid.add_matched_cards(chr(row1 + 64), col1)
+            grid.add_matched_cards(chr(row2 + 64), col2)
+        else:
+            print("Not Match")
+            root.after(1000, hide_word, row1, col1)
+            root.after(1000, hide_word, row2, col2)
+
+    # Reset the current_guesses counter and clear current_word
+    current_guesses = 0
+    current_word.clear()
+
 
 
 
@@ -158,27 +159,13 @@ def store_input():
 
     try:
         if len(input_value) == 2:
-            row = ord(input_value[0].upper()) - 64
-            col = int(input_value[1])
-            reveal_word(row, col)
-            print("Word revealed.")
-            current_guesses += 1
-            current_word.append([row, col])
-
-            if current_guesses == 2:
-                if check_match():
-                    if len(grid.matched_cards) == len(grid.grid):
-                        root.quit()
-                       
-                current_guesses = 0
-                current_word.clear()
+                row = ord(input_value[0].upper()) - 64
+                col = int(input_value[1])
+                reveal_word(row, col)
+                print("Word revealed.")
+            
     except Exception as e:
         print("error :(".format(str(e)))
-                #if len(current_word[0]) == [1]:
-                    #grid.add_matched_cards(chr(current_word[0][0]+64), current_word[0][1])
-                    #if len(grid.matched_cards) == 36:
-                        #root.quit
-
     finally:
         clear_text_input()
 
