@@ -1,7 +1,7 @@
 from time import time
 import random
 import tkinter as tk
-
+global attempt
 attempt = 0
 current_guesses = 0
 current_word = []
@@ -17,7 +17,7 @@ def create_game_list(file_name, sample_size):
     Returns:
         list: A shuffled game list containing pairs of sample words.
     """
-    with open("memoUTF8.txt", "r", encoding='utf-8') as f:
+    with open(file_name, "r", encoding='utf-8') as f:
         full_list = [line.strip() for line in f.readlines()]
         small_list = random.sample(full_list, sample_size)
 
@@ -30,8 +30,14 @@ def create_game_list(file_name, sample_size):
         random.shuffle(game_list)
         return game_list
 
-game_list = create_game_list("memoUTF8.txt", 18)
+game_list = create_game_list("crewmatepack.txt", 18)
 
+def save_to_file(file_name, score):
+    with open(file_name, 'w') as f:
+        return
+        
+
+save_to_file("highscroe.txt", attempt)
 class Board:
     def __init__(self):
         """ Initialize an empty board """
@@ -142,7 +148,7 @@ def reveal_word(row, col):
 
         # Disable the button so it cannot be clicked again
         button.config(state=tk.DISABLED)
-    
+        button.config(bg = 'white', fg = 'black')
         current_guesses += 1
         current_word.append([row, col])
 
@@ -195,22 +201,31 @@ def check_match():
     current_guesses = 0
     current_word.clear()
 
+def create_labels():
+    """Create labels for rows and columns."""
+    for i in range(6):
+        row_label = tk.Label(my_frame, text=chr(i + 65), font=("Helvetica", 20), height=1, width=2, bg='black', fg='white')
+        row_label.grid(row=i + 1, column=0, padx=(50, 0), pady=(0, 10), sticky=tk.W)
 
-
+        col_label = tk.Label(my_frame, text=str(i + 1), font=("Helvetica", 20), height=1, width=2, bg='black', fg='white')
+        col_label.grid(row=0, column=i + 1, padx=(0, 10), pady=(50, 0), sticky=tk.N)
 
 # Tkinter GUI
 root = tk.Tk()
 root.title("Emil A1-F6 IQ Spel!")
 root.geometry("1080x800")
+root.config(bg='black')
 
 my_frame = tk.Frame(root)
 my_frame.pack(pady=10)
 
+create_labels()
+
 buttons = []
 for i in range(6):
     for j in range(6):
-        button = tk.Button(my_frame, text='', font=("Helvetica", 20), height=3, width=6)
-        button.grid(row=i, column=j)
+        button = tk.Button(my_frame, text='', font=("Helvetica", 20), height=3, width=6, fg = 'white')
+        button.grid(row=i + 1, column=j + 1)
         buttons.append(button)
 
 
@@ -236,7 +251,7 @@ def store_input():
     """
     global current_guesses, current_word
     input_value = entry.get()
-
+    #attempt += 1
     try:
         if len(input_value) == 2:
                 row = ord(input_value[0].upper()) - 64
@@ -248,8 +263,6 @@ def store_input():
         print("error :(".format(str(e)))
     finally:
         clear_text_input()
-
-
 
 
 def clear_text_input():
