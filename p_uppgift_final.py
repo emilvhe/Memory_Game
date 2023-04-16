@@ -13,12 +13,16 @@ from operator import itemgetter
 attempt = 0
 current_guesses = 0
 current_word = []
-board_size = 2
+board_size = 0
 
 # NOT USED YET WILL BE IMPLEMENTED ONCE THE GAME WORKSSSSSSSS
 def info_menu():
+    """THE STARTING MENU
+    """
     # A function to later start the game, doesnt work as of now.
     def start_game():
+        """THE START SCREEN MENU
+        """
         global board_size, player_name, game_list, grid
         try:
             board_size = int(input_size_entry.get())
@@ -89,7 +93,7 @@ def create_game_list(file_name, sample_size):
 game_list = create_game_list("memo.txt", (board_size*board_size)//2)
 
 
-def save_to_file(file_name, username, score):
+def save_to_file(file_name, board_size, username, score):
     """Used to save the score of the user. Gonna have to expant
     this to check for the positions and then be able to showcase the file to the player.
 
@@ -98,8 +102,31 @@ def save_to_file(file_name, username, score):
         score (int): the players score, highers = bad
     """
     with open(file_name, 'a') as f:
-        f.write(username + score + "\n")
+        csv_writer =csv.writer(f)
+        csv_writer.writerow([board_size, username, score, time])
 
+def load_scores(file_namn):
+    """Loads the scores form the scores.csv file
+
+    Args:
+        file_namn (str): scores.csv which contain all the scores.
+    Returns:
+        scores: list with the scores
+    """
+    scores = []
+    if os.path.exists(file_namn):
+        with open(file_namn, "r", newline="") as f:
+            csv_reader = csv.reader(f)
+            for row in csv_reader:
+                if len(row) == 4:  # Check if the row has the correct number of elements
+                    try:
+                        scores.append([int(row[0]), row[1], int(row[2]), float(row[3])])
+                    except ValueError:
+                        print(f"bad value found in save file row: {row}")
+                        continue
+                else:
+                    print(f"bad row found in save file: {row}")
+    return scores
 
 class Board:
     def __init__(self, board_size):
@@ -194,7 +221,6 @@ def add_words():
             continue
         else:
             break
-
 
 add_words()
 
@@ -294,11 +320,11 @@ def check_match():
     current_guesses = 0
     current_word.clear()
 
-    if len(grid.matched_cards) == (grid.board_size//2):
+    if len(grid.matched_cards) == (grid.board_size ** 2):
         root.quit()
 
-    save_to_file("high_scores.txt", player_name, attempt)
-    display_highscores()
+        save_to_file("scores.csv", board_size, player_name, str(attempt), start_time)
+        display_highscores()
 
 
 def create_labels():
@@ -362,6 +388,14 @@ def main_game():
 
     # make this all a function later
     def create_buttons():
+        """
+        Creates a grid of buttons based on the board size and adds them to the 'buttons' list.
+        The buttons are placed on the grid in the Tkinter window with the specified properties
+        (font, size, color, etc.).
+
+        Returns:
+        list: A list containing all created buttons.
+        """
         global buttons
         buttons = []
         print("creating buttons")
@@ -404,9 +438,9 @@ def store_input():
     In: Nothing
     Out: Nothing
     """
-    global entry, current_guesses, current_word
+    global entry, current_guesses, current_word, attempt
     input_value = entry.get()
-    # attempt += 1
+    attempt += 1
     try:
         if len(input_value) == 2:
             row = ord(input_value[0].upper()) - 64
@@ -450,7 +484,7 @@ def sort_variables(score):
     return (grid_size, attempts)
 
 
-def save_to_file(file_name, username, score):
+def save_to_file(file_name, board_size, username, score, time):
     """_summary_
 
     Args:
@@ -458,52 +492,37 @@ def save_to_file(file_name, username, score):
         username (_type_): _description_
         score (_type_): _description_
     """
-    with open(file_name, "a") as f:
-        f.write(username + "," + str(score) + "\n")
-
-    with open(file_name, "r") as f:
-        scores = [line.strip().split(",") for line in f.readlines()]
-        scores = [[name, int(score)] for name, score in scores]
-        return scores
+    with open(file_name, 'a') as f:
+        csv_writer = csv.writer(f)
+        csv_writer.writerow([board_size, username, score, time])
     
 # Function to display the scores from the file
-def display_highscores(scores):
-    """_summary_
+def display_highscores():
+
+    """THE FUNCTION WHICH CREATES THE END SCREEN WITH ALL THE SCORES RANKED FROM TOP TO BOTTOM, WHERE LEAST ATTEMPTS IS ON THE TOP
     """
-    
-    global root, end_frame, buttons, entry
-    root = tk.Tk()
+    global highscores
+    highscores = load_scores("scores.csv")
+    highscores.sort(key=itemgetter(2))
 
-    root.title("Game Ended!")
-    root.config(bg='black')
+    highscore_window = tk.Tk()
+    highscore_window.title("Highscores")
 
-    end_frame = tk.Frame(root)
-    end_frame.pack(pady=10)
+    title = tk.Label(highscore_window, text="Highscores", font=("Helvetica", 24))
+    title.pack(pady=20)
 
-    label = tk.Label(end_frame, text="High Scores", font=("Helvetica", 20))
-    label.pack(pady=10)
+    for i, score in enumerate(highscores[:10]):
+        row = tk.Label(
+            highscore_window,
+            text=f"{i + 1}. Board size: {score[0]}x{score[0]}, Name: {score[1]}, Score: {score[2]}",
+            font=("Helvetica", 16),
+        )
+        row.pack(pady=5)
 
-    text_box = tk.Text(end_frame, font=("Helvetica", 14), width=40, height=20)
-    text_box.pack(pady=10)
+    close_button = tk.Button(highscore_window, text="Close", command=highscore_window.destroy)
+    close_button.pack(pady=20)
 
-    if not os.path.exists('scores.csv'):
-        print('No scores found.')
-        return
-    
-    sorted_scores = sorted(scores, key=itemgetter(1))
-
-    # Display the scores in the text box
-    for name, score in sorted_scores:
-        text_box.insert(tk.END, f"{name} - {score}\n")
-
-    end_frame.mainloop()
-
-    # Sort scores by grid size and then by attempts using the sort_key function
-    sorted_scores = sorted(scores, key=sort_variables)
-
-    # Print the sorted scores
-    text = tk.Text(root, text=sorted_scores, height=12, width=12)
-
+    highscore_window.mainloop()
 
 
 if __name__ == '__main__':
