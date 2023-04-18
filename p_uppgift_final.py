@@ -1,7 +1,7 @@
-# Namn: Emil H
+# Name: Emil H
 # Datum 31/03/23
-# P-uppgift 193
-# Titel: Memory
+# P-assignment 193
+# Title: Memory
 
 import os
 import csv
@@ -15,28 +15,29 @@ current_guesses = 0
 current_word = []
 board_size = 0
 
-# NOT USED YET WILL BE IMPLEMENTED ONCE THE GAME WORKSSSSSSSS
+
 def info_menu():
-    """THE STARTING MENU
+    """The start menu where things like board size, player name are set.
     """
-    # A function to later start the game, doesnt work as of now.
     def start_game():
-        """THE START SCREEN MENU
+        """The function that will start the game.
         """
         global board_size, player_name, game_list, grid
         try:
+            #Gets the board, player name as inputs.
             board_size = int(input_size_entry.get())
             player_name = str(name_input_entry.get())
-            if board_size % 2 == 0:
+            if board_size % 2 == 0 and board_size > 0:
+                if len(player_name) > 0:
+                    #Creates the game.
+                    game_list = create_game_list("memo.txt", (board_size * board_size) // 2)
+                    grid = Board(board_size)
+                    add_words()
 
-                game_list = create_game_list("memo.txt", (board_size * board_size) // 2)
-                grid = Board(board_size)
-                add_words()
-
-                info_menu.destroy()
-                global start_time
-                start_time = time()
-                main_game()
+                    info_menu.destroy()
+                    global start_time
+                    start_time = time()
+                    main_game()
         except ValueError:
             print("Invalid input.")
 
@@ -44,10 +45,11 @@ def info_menu():
     info_menu.title("START MENU!")
 
     # beginning text
-    start_text = tk.Label(info_menu, text="Write size A, it will be of the size AxA, only even numbers and an A < 10 is not recommended")
+    start_text = tk.Label(info_menu, text="Write size A, it will be of the size AxA, "
+    "only even numbers and an A < 10 is not recommended")
     start_text.grid(row=0, column=0)
 
-    second_text = tk.Label(info_menu, text="player sick usrname :sunglass:")
+    second_text = tk.Label(info_menu, text="Enter Player Name!")
     second_text.grid(row=2, column=0)
 
     # will be the input where the grid size comes from. AxA grid.
@@ -90,56 +92,59 @@ def create_game_list(file_name, sample_size):
         return game_list
 
 
-game_list = create_game_list("memo.txt", (board_size*board_size)//2)
-
-
 def save_to_file(file_name, board_size, username, score):
-    """Used to save the score of the user. Gonna have to expant
+    """Used to save the score of the user. Will have to expand it later to work with time.
     this to check for the positions and then be able to showcase the file to the player.
 
     Args:
+        username (str): The players name that they input at the start of the game.
+        board_size (int): The board size of the game.
         file_name (str): the file name
         score (int): the players score, highers = bad
     """
     with open(file_name, 'a') as f:
-        csv_writer =csv.writer(f)
+        csv_writer = csv.writer(f)
         csv_writer.writerow([board_size, username, score, time])
 
-def load_scores(file_namn):
+
+def load_scores(file_name):
     """Loads the scores form the scores.csv file
 
     Args:
-        file_namn (str): scores.csv which contain all the scores.
+        file_name (str): scores.csv which contain all the scores.
     Returns:
         scores: list with the scores
     """
     scores = []
-    if os.path.exists(file_namn):
-        with open(file_namn, "r", newline="") as f:
+    if os.path.exists(file_name):
+        with open(file_name, "r", newline="") as f:
             csv_reader = csv.reader(f)
             for row in csv_reader:
                 if len(row) == 4:  # Check if the row has the correct number of elements
                     try:
-                        scores.append([int(row[0]), row[1], int(row[2]), float(row[3])])
-                    except ValueError:
+                        scores.append([int(row[0]), row[1], int(row[2]), float(row[3])]) #Adds the data.
+                    except ValueError: 
                         print(f"bad value found in save file row: {row}")
                         continue
                 else:
                     print(f"bad row found in save file: {row}")
     return scores
 
-class Board:
-    def __init__(self, board_size):
-        """ Initialize an empty board """
-        self.grid = {}
-        self.board_size = board_size
-        rows = [chr(i+65) for i in range(board_size)]
-        cols = [i + 1 for i in range(board_size)]
 
-        # self explaintory, fix somehow to be modular later, using ?
+class Board:
+    def __init__(self, board_size_input):
+        """ Initialize an empty board """
+        self.cards = {}
+        self.board_size = board_size_input
+
+        #
+        rows = [chr(i+65) for i in range(board_size_input)]
+        cols = [i + 1 for i in range(board_size_input)]
+
+        # self explanatory, fix somehow to be modular later, using ?
         for row in rows:
             for col in cols:
-                self.grid[row + str(col)] = None
+                self.cards[row + str(col)] = None
 
         self.matched_cards = []
 
@@ -151,7 +156,7 @@ class Board:
             col (int): The column number (1-6) of the card on the grid.
             value (str): The word to store at the specified location.
         """
-        self.grid[row + str(col)] = value
+        self.cards[row + str(col)] = value
 
     def get_value(self, row, col):
         """Get the value at the specified row and col on the grid.
@@ -163,7 +168,7 @@ class Board:
         Returns:
             str: The word stored at the specified location.
         """
-        return self.grid[row + str(col)]
+        return self.cards[row + str(col)]
 
     def get_all_values(self):
         """Get all values stored in the grid.
@@ -171,7 +176,7 @@ class Board:
         Returns:
             dict_values: A collection of all values in the grid.
         """
-        return self.grid.values()
+        return self.cards.values()
 
     def hide_value(self, row, col):
         """Hide the value at the specified row and col on the grid.
@@ -180,7 +185,7 @@ class Board:
             row (str): The row letter (A-F) of the card on the grid.
             col (int): The column number (1-6) of the card on the grid.
         """
-        self.grid[row + str(col)] = None
+        self.cards[row + str(col)] = None
 
     def add_matched_cards(self, row, col):
         """Add the specified row and col to the list of matched cards.
@@ -204,25 +209,20 @@ class Board:
         return row + str(col) in self.matched_cards
 
 
-# create a new grid object
-grid = Board(board_size)
-
-
 def add_words():
     """Goes through row and such and adds one word from the game list.
     """
     i = 0
 
     # This adds words from the game_list with words from game_list
-    for row in grid.grid.keys():
+    for row in grid.cards.keys():
+        #For all the cards the value is set for each in
         grid.set_value(row[0], int(row[1]), game_list[i])
-        if i < (grid.board_size * grid.board_size) -1:
+        if i < (grid.board_size * grid.board_size) - 1:
             i += 1
             continue
         else:
             break
-
-add_words()
 
 
 def reveal_word(row, col):
@@ -246,13 +246,13 @@ def reveal_word(row, col):
         # https://www.toppr.com/guides/python-guide/examples/python-examples/python-program-find-ascii-value-character/
 
         value = grid.get_value(chr(row + 64), col)
-        print("Vword revealed : {}".format(value))
+        print("Word revealed : {}".format(value))
 
         # Set the text of the button to the revealed word
         button.config(text=value)
 
         # Disable the button so it cannot be clicked again
-        button.config(state=tk.DISABLED)
+        # button.config(state=tk.DISABLED)
         button.config(bg='white', fg='black')
         current_guesses += 1
         current_word.append([row, col])
@@ -280,6 +280,8 @@ def hide_word(row, col):
 
     button = buttons[(row - 1) * board_size + (col - 1)]
     print("hide_word function we chilling")
+    
+    #Checks wether cards match and if they match they wont be removed.
     if not grid.is_matched_card(chr(row + 64), col):
         button.config(text="")
         button.config(state=tk.NORMAL)
@@ -296,7 +298,7 @@ def check_match():
     global current_word, current_guesses
 
     # Once the list of the current displayed words are equal to two,
-    # they get stored properly and then the words is aquired from the grid.
+    # they get stored properly and then the words is acquired from the grid.
     if current_word and len(current_word) == 2:
         row1, col1 = current_word[0]
         row2, col2 = current_word[1]
@@ -310,7 +312,7 @@ def check_match():
             grid.add_matched_cards(chr(row1 + 64), col1)
             grid.add_matched_cards(chr(row2 + 64), col2)
         else:
-            # The opposite of the aformentioned, but here's theres a delay to
+            # The opposite of the aforementioned, but here's there is a delay to
             # allow the user to see the words before they hide.
             print("Not Match")
             root.after(1000, hide_word, row1, col1)
@@ -321,15 +323,15 @@ def check_match():
     current_word.clear()
 
     if len(grid.matched_cards) == (grid.board_size ** 2):
-        root.quit()
+        root.destroy()
 
         save_to_file("scores.csv", board_size, player_name, str(attempt), start_time)
-        display_highscores()
+        display_high_scores()
 
 
 def create_labels():
-    """Create labels for rows and columns. Idk why bg='black'
-     makes like only the small part black but im to tired to care."""
+    """Create labels for rows and columns. I don't know why bg='black'
+    makes like only the small part black but im to tired to care."""
     
     global my_frame, grid
 
@@ -369,15 +371,18 @@ def is_already_revealed(row, col):
     return False
 
 
-# make this also a function later zzzzzz
-# Tkinter GUI
-
 def main_game():
+    """What runs the main game, 
+
+    Returns:
+        _type_: _description_
+    """
+    grid = Board(board_size)
 
     global root, my_frame, buttons, entry
     root = tk.Tk()
 
-    root.title("Memory Spel!")
+    root.title("Memory Game!")
     root.config(bg='black')
 
     my_frame = tk.Frame(root)
@@ -385,8 +390,6 @@ def main_game():
 
     create_labels()
 
-
-    # make this all a function later
     def create_buttons():
         """
         Creates a grid of buttons based on the board size and adds them to the 'buttons' list.
@@ -408,6 +411,7 @@ def main_game():
                 buttons.append(button)
         return buttons
 
+    game_list = create_game_list("memo.txt", (board_size*board_size)//2)
 
     create_buttons()
 
@@ -427,6 +431,8 @@ def main_game():
     # Button to save the input.
     button = tk.Button(root, text="Submit coordinate", command=store_input)
     button.pack(side=tk.BOTTOM)
+
+    add_words()
 
     # Start the Tkinter event loop
     root.mainloop()
@@ -449,7 +455,7 @@ def store_input():
                 reveal_word(row, col)
                 print("Word revealed.")
             else:
-                print("coordinte already revealed")
+                print("Coordinate already revealed")
             
     except Exception as e:
         print("error :(".format(str(e)))
@@ -461,71 +467,84 @@ def clear_text_input():
     """Clear the text input in the Entry widget."""
     entry.delete(0, tk.END)
 
+
 def save_score(grid_size, name, attempts, time_taken):
-    #Insperation från David Kniberg P-uppgift.
+    """The function that saves the scores and writes them to the CSV file.
+
+    Args:
+        grid_size (int): the board size of the game.
+        name (string): The name of the person who played the game.
+        attempts (int): The amount of attempts the person had made.
+        time_taken (float): The time taken, doesn't show in the game later, but it is still stored in the file.
+    """
+    # Inspiration from Kniberg, lab partner in course DD1318.
 
     score_list = [grid_size, name, attempts, time_taken]
 
     with open('scores.csv', 'a', newline='') as csvfile:
         score_writer = csv.writer(csvfile)
         score_writer.writerow(score_list)
-    
+
+
 def sort_variables(score):
-    """_summary_
+    """A function that sorts the score.
 
     Args:
-        score (_type_): _description_
+        score (int): the amount of attempts, could probably name this better.
 
     Returns:
-        _type_: _description_
+        grid_size (int): the grid size of the game.
+        attempts (int): the amount of guesses made throughout the game.
     """
     grid_size = int(score[0])
     attempts = int(score[2])
-    return (grid_size, attempts)
+    return grid_size, attempts
 
 
 def save_to_file(file_name, board_size, username, score, time):
-    """_summary_
+    """The function that saves the game information to the CSV file.
 
     Args:
-        file_name (_type_): _description_
-        username (_type_): _description_
-        score (_type_): _description_
+        board_size (int): the size of the game board.
+        file_name (str): the name of the game document.
+        username (str): the username of the player.
+        score (int): the amount of attempts made during the game.
+        time (float): the amount of time the player has taken. OBS! Not implemented correctly.
+
     """
     with open(file_name, 'a') as f:
         csv_writer = csv.writer(f)
         csv_writer.writerow([board_size, username, score, time])
     
 # Function to display the scores from the file
-def display_highscores():
 
-    """THE FUNCTION WHICH CREATES THE END SCREEN WITH ALL THE SCORES RANKED FROM TOP TO BOTTOM, WHERE LEAST ATTEMPTS IS ON THE TOP
+
+def display_high_scores():
+    """THE FUNCTION WHICH CREATES THE END SCREEN WITH ALL THE SCORES RANKED FROM TOP TO BOTTOM,
+    WHERE THE LEAST ATTEMPTS IS ON THE TOP OF THE SCOREBOARD
     """
-    global highscores
-    highscores = load_scores("scores.csv")
-    highscores.sort(key=itemgetter(2))
+    high_scores = load_scores("scores.csv")
+    high_scores.sort(key=itemgetter(2))
 
-    highscore_window = tk.Tk()
-    highscore_window.title("Highscores")
+    high_score_window = tk.Tk()
+    high_score_window.title("High score Window!")
 
-    title = tk.Label(highscore_window, text="Highscores", font=("Helvetica", 24))
+    title = tk.Label(high_score_window, text="High scores", font=("Helvetica", 24))
     title.pack(pady=20)
 
-    for i, score in enumerate(highscores[:10]):
+    for i, score in enumerate(high_scores[:10]):
         row = tk.Label(
-            highscore_window,
+            high_score_window,
             text=f"{i + 1}. Board size: {score[0]}x{score[0]}, Name: {score[1]}, Score: {score[2]}",
             font=("Helvetica", 16),
         )
         row.pack(pady=5)
 
-    close_button = tk.Button(highscore_window, text="Close", command=highscore_window.destroy)
+    close_button = tk.Button(high_score_window, text="Close", command=high_score_window.destroy)
     close_button.pack(pady=20)
 
-    highscore_window.mainloop()
+    high_score_window.mainloop()
 
 
 if __name__ == '__main__':
     info_menu()
-
-
